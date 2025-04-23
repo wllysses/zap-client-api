@@ -1,60 +1,90 @@
 import { Request, Response, NextFunction } from "express";
 
 export class ProxyController {
-  async getData(req: Request, res: Response, next: NextFunction) {
+  async handle(req: Request, res: Response, next: NextFunction) {
     try {
-      const { url, token } = req.body;
+      const { method, url, token, payload } = req.body;
 
-      if (!url) {
-        throw new Error("Url is required");
+      if (!url || !method) {
+        throw new Error("Url and Method are required");
       }
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: !token ? "none" : `Bearer ${token}`,
-        },
-      });
+      if (method === "GET") {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            Authorization: !token ? "none" : `Bearer ${token}`,
+          },
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      return res.json({
-        success: response.ok,
-        code: response.status,
-        data,
-      });
-    } catch (err) {
-      next(err);
-    }
-  }
+        return res.status(response.status).json({
+          success: response.ok,
+          status_code: response.status,
+          data,
+        });
+      } else if (method === "POST") {
+        if (!payload) {
+          throw new Error("Payload is required");
+        }
 
-  async postData(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { url, token, requestBody } = req.body;
+        const response = await fetch(url, {
+          method,
+          headers: {
+            Authorization: !token ? "none" : `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
 
-      if (!url) {
-        throw new Error("Url is required");
+        const data = await response.json();
+
+        return res.status(response.status).json({
+          success: response.ok,
+          status_code: response.status,
+          data,
+        });
+      } else if (method === "PUT") {
+        if (!payload) {
+          throw new Error("Payload is required");
+        }
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            Authorization: !token ? "none" : `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        return res.status(response.status).json({
+          success: response.ok,
+          status_code: response.status,
+          data,
+        });
+      } else if (method === "DELETE") {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            Authorization: !token ? "none" : `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+
+        return res.status(response.status).json({
+          success: response.ok,
+          status_code: response.status,
+          data,
+        });
+      } else {
+        throw new Error("This Http method is not supported.");
       }
-
-      if (!requestBody) {
-        throw new Error("Request body is required");
-      }
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: !token ? "none" : `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await response.json();
-
-      return res.status(response.status).json({
-        success: response.ok,
-        code: response.status,
-        data,
-      });
     } catch (err) {
       next(err);
     }
